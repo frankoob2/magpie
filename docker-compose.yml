@@ -70,7 +70,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${MAGPIE_FRONTEND_IMAGE:-kuuchen/magpie-frontend}:${MAGPIE_FRONTEND_TAG:-${MAGPIE_IMAGE_TAG:-latest}}
+    image: kuuchen/magpie-frontend:44977f9
     container_name: magpie_frontend
     environment:
       - EXPORT_PROXY_READ_TIMEOUT_SECONDS=${EXPORT_PROXY_READ_TIMEOUT_SECONDS:-310}
