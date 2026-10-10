@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_OWNER="${MAGPIE_REPO_OWNER:-Kuucheen}"
+REPO_OWNER="${MAGPIE_REPO_OWNER:-Magpie-Tools}"
 REPO_NAME="${MAGPIE_REPO_NAME:-magpie}"
 REPO_REF="${MAGPIE_REPO_REF:-master}"
 if [[ "${REPO_REF}" == refs/* ]]; then
@@ -160,6 +160,14 @@ download "${ENV_EXAMPLE_URL}" ".env.example" || true
 
 echo "Pulling images..."
 "${compose_cmd[@]}" -f docker-compose.yml pull
+
+echo "Migration safety: confirm you have coordinated PostgreSQL and Redis backups."
+echo "Workspace migrations change resource ownership columns; rollback requires those backups."
+echo "Stopping backend for database migration..."
+"${compose_cmd[@]}" -f docker-compose.yml stop backend
+
+echo "Running database migration..."
+"${compose_cmd[@]}" -f docker-compose.yml run --rm backend --migrate-only
 
 echo "Applying update..."
 "${compose_cmd[@]}" -f docker-compose.yml up -d

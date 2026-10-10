@@ -1,171 +1,478 @@
 <div align="center">
-  <img src="frontend/src/assets/logo/magpie-logo-thumbnail.png" alt="Magpie logo">
-  <h3>A Multi-user AIO Proxy Manager</h3>
+  <img src="resources/logo/magpie-light-github.png" alt="Magpie logo" width="180">
+  <h3>A multi-user, all-in-one proxy manager</h3>
 </div>
 
 <div align="center">
-  <img src="https://img.shields.io/github/license/Kuucheen/magpie.svg" alt="license">
-  <img src="https://img.shields.io/github/issues/Kuucheen/magpie.svg" alt="issues">
+  <img src="https://img.shields.io/github/license/Magpie-Tools/magpie.svg" alt="license">
+  <img src="https://img.shields.io/github/issues/Magpie-Tools/magpie.svg" alt="issues">
   <a href="https://discord.gg/7FWAGXzhkC">
-      <img src="https://img.shields.io/badge/Discord-%235865F2.svg?&logo=discord&logoColor=white" alt="discord">
+    <img src="https://img.shields.io/badge/Discord-%235865F2.svg?&logo=discord&logoColor=white" alt="discord">
   </a>
   <br>
   <a href="https://magpie.tools">
-      <img src="https://img.shields.io/badge/Website-magpie.tools-0f766e?style=flat-square&logoColor=white" alt="website">
+    <img src="https://img.shields.io/badge/Website-magpie.tools-0f766e?style=flat-square&logoColor=white" alt="website">
   </a>
   <a href="https://magpie.tools/docs/">
-      <img src="https://img.shields.io/badge/Docs-magpie.tools%2Fdocs-1f2937?style=flat-square&logo=gitbook&logoColor=white" alt="docs">
+    <img src="https://img.shields.io/badge/Docs-magpie.tools%2Fdocs-1f2937?style=flat-square&logo=gitbook&logoColor=white" alt="docs">
   </a>
   <br>
   <img src="https://img.shields.io/docker/pulls/kuuchen/magpie-frontend?style=flat-square&logo=docker&label=frontend%20pulls" alt="docker frontend pulls">
   <img src="https://img.shields.io/docker/pulls/kuuchen/magpie-backend?style=flat-square&logo=docker&label=backend%20pulls" alt="docker backend pulls">
-
-
-[//]: # (  <img src="https://img.shields.io/github/stars/Kuucheen/magpie.svg?style=social" alt="stars">)
 </div>
 
 ---
 
-Magpie is a self-hosted proxy manager that turns messy proxy lists into something you can actually use: 
-- it scrapes proxies from public sources
-- continuously checks which ones are alive
-- filters out dead/bad entries
-- assigns each proxy a reputation score (uptime/latency/anonymity)
-- lets you create your own rotating proxy endpoints from the healthy pool
+Magpie is a self-hosted proxy manager that scrapes public proxy sources,
+continuously checks their health, filters bad entries, calculates reputation
+scores, and creates rotating proxy endpoints from the healthy pool.
 
-all via a web dashboard.
+This is the Magpie distribution repository. It connects the independently
+versioned frontend and backend images with PostgreSQL and Redis, and owns the
+install, update, and performance-validation tooling. Application source code
+lives in the component repositories below.
 
-<img src="resources/screenshots/dashboard.png" alt="Dashboard">
+## Repository map
 
+| Repository | Responsibility |
+| --- | --- |
+| [`Magpie-Tools/magpie`](https://github.com/Magpie-Tools/magpie) | Distribution: Docker Compose, installers, update helpers, release configuration, and performance gates |
+| [`Magpie-Tools/magpie-frontend`](https://github.com/Magpie-Tools/magpie-frontend) | Angular application and frontend container image |
+| [`Magpie-Tools/magpie-backend`](https://github.com/Magpie-Tools/magpie-backend) | Go API, background jobs, proxy workers, and backend container image |
+| [`Magpie-Tools/magpie-website`](https://github.com/Magpie-Tools/magpie-website) | `magpie.tools` marketing website |
+| [`Magpie-Tools/magpie-docs`](https://github.com/Magpie-Tools/magpie-docs) | Docusaurus documentation published at `/docs` |
 
-<details>
-    <summary>More Screenshots</summary>
-    <img src="resources/screenshots/proxyList.png" alt="Proxy List">
-    <img src="resources/screenshots/proxyDetail.png" alt="Proxy Details">
-    <img src="resources/screenshots/rotatingProxies.png" alt="Rotating Proxies">
-    <img src="resources/screenshots/accountSettings.png" alt="Account Settings">
-</details>
+The repositories are siblings, not Git submodules. A production installation
+only needs this distribution repository or the one-command installer. It pulls
+the published component images.
+
+Backend source builds require Go `1.27.1`. Backend CI reads the version from
+`magpie-backend/go.mod`, and its Docker builder uses the matching
+`golang:1.27.1-alpine` image. Toolchain and dependency upgrades must also pass
+the backend validation and checker benchmarks described in
+[`scripts/perf`](scripts/perf/README.md).
 
 ## Features
-- Multi-user
-- Auto-scraping
-- Proxy Checking / Health checks
-- Reputation & filters
-- Rotating proxy endpoints
-- Dashboard + API
-- Application protocols support (HTTP, HTTPS, SOCKS4, SOCKS5)
-- Transport protocols support (TCP, QUIC/HTTP3)
 
-## Quick Start
+- Multi-workspace dashboard and API with owner, admin, operator, and viewer roles
+- Account-bound workspace invitations with an in-app inbox and optional email notifications
+- Workspace and rotating-pool alerts with incident history and email, Slack, Discord, and webhook delivery
+- Workspace-owned capacity, operational settings, managed proxies, tags, sources, judges, and rotators
+- Automatic proxy scraping and health checks
+- Default and ordered tag checker rules with Replace, Add, Remove, and shared transport, timeout, retries, and inheritance choices per tag
+- Provider hostname, IPv4, and IPv6 proxy import, checking, search, export, and rotation. IP blacklists apply to literal addresses, and automatic scraping remains IPv4-only.
+- Workspace-owned, color-coded proxy tags with multi-tag assignment, import tagging, automatic source tagging, search, and filtering
+- Active, paused, and archived managed-proxy lifecycle with multi-select list, export, and delete filters; capacity overflow is retained rather than deleted
+- Workspace-wide Pause or Delete action after consecutive proxy check failures. Pause remains the default; deletion affects future failed checks, preserves other workspaces, and allows later rediscovery.
+- Reputation scoring and filters
+- User-defined rotating proxy endpoints
+- HTTP, HTTPS, SOCKS4, and SOCKS5 application protocols
+- TCP and QUIC/HTTP3 transport support
 
-1. **Install Prerequisites:**
-    - [Docker Desktop](https://www.docker.com/) (or Docker Engine + Compose)
+<img src="resources/screenshots/dashboard.png" alt="Magpie dashboard">
 
-2. **One-command install (recommended)**
+<details>
+  <summary>More screenshots</summary>
+  <img src="resources/screenshots/proxyList.png" alt="Proxy list">
+  <img src="resources/screenshots/proxyDetail.png" alt="Proxy details">
+  <img src="resources/screenshots/rotatingProxies.png" alt="Rotating proxies">
+  <img src="resources/screenshots/accountSettings.png" alt="Account settings">
+</details>
 
-   **macOS/Linux**:
-   ```bash
-   curl -fsSL https://raw.githubusercontent.com/Kuucheen/magpie/refs/heads/master/scripts/install.sh | bash
-   ```
-   If you see a Docker socket permission error on Linux, the installer will try to use `sudo` for Docker commands (you may be prompted).  
-   Alternative fix: `sudo usermod -aG docker "$USER"` (then log out/in, or run `newgrp docker`).  
-   Note: `sudo curl ... | bash` still runs `bash` as your user. Try `curl ... | sudo bash` instead.
+## Quick start
 
-   **Windows (PowerShell)**:
-   ```bash
-   iwr -useb https://raw.githubusercontent.com/Kuucheen/magpie/refs/heads/master/scripts/install.ps1 | iex
-   ```
+Prerequisite: [Docker Desktop](https://www.docker.com/) or Docker Engine with
+Docker Compose.
 
-   This creates a `magpie/` folder with a `docker-compose.yml` and `.env`, then starts the stack.
+### One-command install
 
-3. **Required secrets** – Magpie requires:
-   - `PROXY_ENCRYPTION_KEY` to encrypt stored proxy secrets (keep it stable between restarts/updates)
+macOS/Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Magpie-Tools/magpie/refs/heads/master/scripts/install.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/Magpie-Tools/magpie/refs/heads/master/scripts/install.ps1 | iex
+```
+
+The installer creates a `magpie/` deployment directory, generates `.env`, pulls
+the published images, and starts the complete stack.
+
+If Docker reports a socket permission error on Linux, add your user to the
+Docker group and start a new login session:
+
+```bash
+sudo usermod -aG docker "$USER"
+```
+
+### Clone and run
+
+```bash
+git clone https://github.com/Magpie-Tools/magpie.git
+cd magpie
+cp .env.example .env
+# Edit .env and replace PROXY_ENCRYPTION_KEY and the example credentials.
+docker compose run --rm backend --migrate-only
+docker compose up -d
+```
+
+Open:
+
+- UI: http://localhost:5050
+- API: http://localhost:5656/api
+- Documentation: https://magpie.tools/docs/
+
+The first registered user becomes the administrator in the default local
+configuration. Optional geolocation and reputation integrations are available
+under **Admin → Plugins**.
 
 > [!WARNING]
-> `PROXY_ENCRYPTION_KEY` locks all stored secrets (proxy auth, passwords, and ip addresses).  
-> If you start the backend (or update to a new version) with a *different* key than the one used before, decryption fails and previously added proxies will not display or validate.  
-> **Fix:** start the backend again using the **previous key** and everything works like before.  
-> **Only rotate on purpose:** if you need a new key, export your proxies first.
+> Keep `PROXY_ENCRYPTION_KEY` stable across restarts and updates. It encrypts
+> proxy usernames and passwords in PostgreSQL and keys route fingerprints.
+> Starting the backend with a different key prevents existing secrets from
+> being decrypted. For checker throughput, Redis queue payloads contain proxy
+> addresses and credentials in plaintext by default. Keep Redis private and
+> protect its access, volumes, and backups. Set
+> `PROXY_QUEUE_ENCRYPT_CREDENTIALS=true` only if you accept its per-check cost.
 
-4. **If you don't want to use the installer** 
+For production updates, take coordinated PostgreSQL and Redis backups, stop the
+backend, and run the new image's database migration before starting it again:
 
-    Requires [Git](https://git-scm.com/downloads)
+```bash
+docker compose stop backend
+docker compose run --rm backend --migrate-only
+docker compose up -d
+```
 
-   ```bash
-   git clone https://github.com/Kuucheen/magpie.git
-   cd magpie
-   cp .env.example .env
-   # edit .env and set PROXY_ENCRYPTION_KEY
-   # optional: override JWT_SECRET
-   # optional: override DB_USERNAME/DB_PASSWORD/DB_NAME
-   # optional: configure MAIL_FROM_ADDRESS/SMTP_HOST for email delivery
-   docker compose up -d
-   ```
-   > `docker-compose.yml` is local/dev oriented. For production deployments, use hardened manifests and secure DB/Redis/TLS settings.
-5. **Dive in**
-    - UI: http://localhost:5050
-    - API: http://localhost:5656/api
-    - Docs: https://magpie.tools/docs/
+Do not skip the migration when updating an existing installation. Workspace-capable
+releases create one personal workspace and owner membership for every existing
+account, move operational ownership from `user_id` to `workspace_id`, and repair
+PostgreSQL foreign keys. Existing resources remain available through the new
+default workspace. The migration is not compatible with older backend images;
+rollback requires the coordinated PostgreSQL and Redis backups.
 
-      The first user who registers becomes admin automatically.
+API clients may select a workspace with `X-Workspace-ID`. When omitted, the
+backend uses the authenticated account's default workspace membership.
+Workspace access is offered through expiring invitations for existing Magpie
+accounts. Accepting an invitation does not change the account's default
+workspace. SMTP is optional; pending invitations remain available in the app
+when email delivery is disabled.
 
-Optional integrations, including geolocation and advanced reputation checks, can be enabled and configured under Admin -> Plugins.
+The included Compose configuration is intended for local and self-hosted
+deployments. Internet-exposed production deployments should harden secrets,
+database and Redis access, TLS termination, registration policy, and backups.
 
-### Updating
-Use the helper scripts that match how you installed Magpie.
+## Alerts setup
 
-- **If you used the one-command installer**:
-  - Refreshes `docker-compose.yml`, updates image references, pulls the latest images, and restarts the stack.
-  - **macOS/Linux**: 
-      ```bash
-      curl -fsSL https://raw.githubusercontent.com/Kuucheen/magpie/refs/heads/master/scripts/update.sh | bash
-      ```
-      If you see a Docker socket permission error on Linux, the updater will try to use `sudo` for Docker commands (you may be prompted).
-  - **Windows (PowerShell)**: 
-      ```bash
-      iwr -useb https://raw.githubusercontent.com/Kuucheen/magpie/refs/heads/master/scripts/update.ps1 | iex
-      ```
+Run the normal `--migrate-only` upgrade step with all backend instances stopped
+before starting an alerts-capable backend. It creates workspace-owned alert
+rules, destinations, incidents, and delivery records. Update the frontend to
+expose the new `/alerts` page. Existing workspaces start with no alert rules.
 
-- **If you cloned the project**:
-  - Pulls the latest repo changes and rebuilds the `frontend` and `backend` containers.
-  - **macOS/Linux**:
-    ```bash
-    ./scripts/update-frontend-backend.sh
-    ```
-  - **Windows (Command Prompt)**:
-    ```bash
-    scripts\update-frontend-backend.bat
-    ```
-    Double-click the file or run it from the repo root.
+Workspace admins and owners configure shared destinations; operators configure
+rules, and viewers can read alert history. Email uses the existing `MAIL_FROM_*`
+and `SMTP_*` configuration. Slack and Discord use incoming webhook URLs, and
+generic webhooks support optional HMAC-SHA256 signatures. Destination targets
+and signing secrets use the stable `PROXY_ENCRYPTION_KEY` and are write-only
+through the API. PostgreSQL backups contain incident history and encrypted
+destinations, so retain the key with your normal secret backup process.
 
-## Local Development
-- Prerequisites:
-  - Go `1.26.x`
-  - Node.js `20.19+` or `22.12+`
-  - npm
-  - Docker
-- Services: `docker compose up -d postgres redis`
-- Backend: `cd backend && go run ./cmd/magpie`
-- Frontend: `cd frontend && npm install && npm run start`
-- Docs site: `cd website/docs && npm install && npm run start`
+Discord and Slack destinations can optionally mention a selected audience,
+including a Discord role ID or a Slack user group ID. Mentions default to off
+for new and existing destinations. Run migrations before starting a backend
+with mention settings. Chat alerts use native timestamps with an ISO timestamp
+below; email includes readable UTC time and the ISO timestamp.
 
-Optional email delivery env vars for the backend:
-- `MAIL_FROM_ADDRESS`: sender address used in outbound email, for example `no-reply@example.com`
-- `MAIL_FROM_NAME`: optional display name, for example `Magpie`
-- `PUBLIC_APP_URL`: public frontend base URL used in password reset links, for example `https://magpie.example.com`
-- `SMTP_HOST`: SMTP server host
-- `SMTP_PORT`: SMTP server port, defaults to `587`
-- `SMTP_USERNAME` and `SMTP_PASSWORD`: optional SMTP auth credentials; if one is set, both must be set
-- `PASSWORD_RESET_TOKEN_TTL_MINUTES`: optional reset-link lifetime, defaults to `30`
+The evaluator also requires the migration that adds internal attempt timestamps
+to alert rules. Those timestamps preserve scheduling priority across timeouts
+and leadership changes. Existing measurements and incidents remain intact.
+Evaluation uses four PostgreSQL workers with separate query budgets. Each worker
+evaluates a workspace's rules together, batching state, incident, and outbox
+writes. Whole-workspace route counts share grouped reads of current evidence;
+pool rules reuse counts for identical eligibility filters. Each backend instance
+drains notifications through ten workers, polling every five seconds when idle.
+These limits require no new environment variables or additional migrations
+beyond the attempt-timestamp migration above.
 
-## Attributions & External Sources
-- [AbuseIPDB](https://www.abuseipdb.com/) — logo used with permission when linking to their site.
+The cadence regression covers 2,000 workspaces with 100 rules each on two-CPU
+PostgreSQL. All 200,000 rules completed each of six consecutive passes in
+19–30 seconds with one destination per rule, including opening and recovering
+200,000 incidents and queuing 400,000 notifications. See the backend's
+`docs/adr/0012-evaluate-alerts-from-existing-workspace-measurements.md` for the
+workload, exact measurements, and reproducible test command. Database history
+size, pool filters, notification fanout, and other database traffic affect
+capacity; measure those workloads on the deployment's hardware.
 
-## Community
+Rules monitor usable-route minima, checker success-rate minima, or average
+successful-check latency maxima. Counts follow the current rotating policy;
+rotator success/latency measurements cover workspace checks for its upstream
+protocol over TCP. Two-minute breach and recovery periods limit noise, with
+15-minute windows and minimum samples for checker metrics. Recent check history
+survives managed-proxy deletion for the observation window. Evaluation and
+delivery run outside the checker loop and add no operations per proxy check.
+
+Webhook requests follow the existing outbound network restrictions and reject
+redirects. `ALLOW_PRIVATE_NETWORK_EGRESS=false` is the Compose default. Set it
+explicitly to `true` only when internal webhook targets or HTTP generic
+webhooks are required; it also affects other application outbound requests.
+
+See the [alerts guide](https://magpie.tools/docs/user-guide/alerts) for incident,
+retry, and retention behavior.
+
+## Tag checker settings upgrade
+
+Update the frontend and all backend replicas together. Run the migration with
+every backend stopped. This release adds protocol defaults, ordered workspace
+tag rules, a sparse projection for tagged checks, and workspace/configuration
+keys on latest statistics. The latest-statistics primary key changes, so older
+backend images must not write to the migrated database.
+
+Existing checker values become shared Default settings with no tag rules. Legacy checks remain in history. Current health
+and TCP rotator eligibility wait for new matching checks because old results
+lack reliable transport and settings attribution. Failure streaks remain saved.
+No new environment variables are required, and queue encryption stays opt-in.
+Restore coordinated PostgreSQL and Redis backups to roll back.
+
+In Checker Settings, select Default or a workspace tag, choose Replace, Add, or
+Remove, and arrange matching tags in the Tag priority popup with drag handles or
+up/down buttons. The top rule has
+highest priority and applies last. Transport, timeout, and retries inherit
+independently and apply to every enabled protocol. Judges, HTTPS-for-SOCKS, and automatic failure actions remain
+workspace-wide. Changes apply at the next scheduled check; empty selections
+skip checking without pausing or deleting the proxy.
+
+REST exposes `checker_settings` and GraphQL exposes `checkerSettings`. Clients
+that omit these fields preserve stored rules and shared profile values. Column
+and judge saves send only their edited fields. Checker refreshes reconcile the
+persisted projection across replicas and rewrite only affected routes and source
+summaries. Unchanged reconciliation skips route reads, and column-only saves skip
+checker refresh. Dashboard caches verify the committed checker generation before
+serving health; recent checks use indexed candidates before fetching evidence.
+Run the updated migration even when upgrading an earlier tag-settings build:
+it adds workspace revision counters, a coalesced route-change journal, and the
+active recent-checks index. No new environment settings are required.
+The [checker guide](https://magpie.tools/docs/user-guide/checker-and-judges)
+and [performance harness](scripts/perf/README.md) explain behavior and validation.
+
+Queue interval synchronization now starts after instance settings load. Older
+builds could publish a one-second placeholder when a test, migration, or replica
+started against the shared Redis, causing rapid proxy rechecks. Update and restart
+every backend replica to restore the configured interval. Existing due entries
+converge through normal requeue. This fix needs no database migration or new
+environment setting; tag rules continue to use the global checker interval.
+
+## API client upgrade note
+
+Automatic source tags require the updated frontend and backend images. Run the
+backend's `--migrate-only` command before starting the updated workers to create
+the workspace source-tag rule table. Existing sources start with no automatic
+tags, and configuring them affects future scrape results, including rediscovered
+proxies. Rules add missing tags without replacing existing assignments. Update
+all backend workers together because older workers do not apply these rules.
+Source rules add no work to the ordinary proxy checker loop.
+
+GraphQL clients must omit `scrapingSources` from `UpdateUserSettingsInput`.
+That input previously reported success without saving sources and now returns a
+validation error. Sources remain readable through GraphQL; use the REST
+scrape-source endpoints to manage them. Settings mutations now reject negative
+or oversized checker integers and refresh the checker judge cache after saving.
+No additional environment variables or database migration are needed for these
+API corrections.
+
+## Component image versions
+
+Frontend and backend releases can be selected independently in `.env`:
+
+```dotenv
+MAGPIE_BACKEND_IMAGE=kuuchen/magpie-backend
+MAGPIE_BACKEND_TAG=latest
+MAGPIE_FRONTEND_IMAGE=kuuchen/magpie-frontend
+MAGPIE_FRONTEND_TAG=latest
+```
+
+Pin immutable release tags for reproducible deployments. The legacy
+`MAGPIE_IMAGE_TAG` variable remains supported as a shared fallback; an explicit
+component tag takes precedence.
+
+## Updating
+
+For an installer-created deployment, refresh the Compose definition, pull
+images, and restart the stack with:
+
+macOS/Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Magpie-Tools/magpie/refs/heads/master/scripts/update.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/Magpie-Tools/magpie/refs/heads/master/scripts/update.ps1 | iex
+```
+
+For a cloned distribution repository:
+
+```bash
+./scripts/update-stack.sh
+```
+
+Or from Windows Command Prompt:
+
+```bat
+scripts\update-stack.bat
+```
+
+These helpers pull distribution changes and published images; they no longer
+build frontend or backend source from this repository.
+
+## Proxy export timeouts
+
+Proxy exports allow up to 300 seconds of database and formatting work by default.
+Other API responses retain their normal write timeout. Export batches flush as
+ready; disconnecting cancels the export queries. A failed transfer must be retried
+and is not a complete export file.
+
+Compose passes `PROXY_EXPORT_TIMEOUT_SECONDS=300` to the backend and
+`EXPORT_PROXY_READ_TIMEOUT_SECONDS=310` to the frontend nginx container. Set both
+in `.env` to tune exports, keeping nginx's value at least 10 seconds higher.
+The backend allows an extra 5 seconds to write a timeout error before any data
+has been sent. Any additional reverse proxy must allow the same wait for export
+responses. Apply changed values by recreating the frontend and backend services.
+Both updated images are needed for this behavior; updating `.env` alone does not
+add it to older releases.
+
+An export that repeatedly takes over 30 seconds warrants checking database query
+times and resource contention with the checker, even when a higher limit lets it
+finish.
+
+## Local development
+
+Clone all five repositories as siblings:
+
+```text
+workspace/
+├── magpie/
+├── magpie-backend/
+├── magpie-frontend/
+├── magpie-website/
+└── magpie-docs/
+```
+
+Use this repository for shared infrastructure:
+
+```bash
+cd magpie
+cp .env.example .env
+# Edit .env first.
+docker compose up -d postgres redis
+```
+
+Then run the component you are developing from its own repository:
+
+- Backend: `cd ../magpie-backend && go run ./cmd/magpie`
+- Frontend: `cd ../magpie-frontend && npm ci && npm run start`
+- Website: `cd ../magpie-website && npm ci && npm run dev`
+- Docs: `cd ../magpie-docs && npm ci && npm run start`
+
+The backend must be configured to use PostgreSQL at `localhost:5434` and Redis
+at `localhost:8946` when those services are started from this Compose file.
+Each component repository contains its own build, test, and development details.
+
+Run backend tests and benchmarks against disposable PostgreSQL and Redis
+instances. Keep their Redis databases separate from the running development
+stack and from each other; queue concurrency fixtures flush their test database.
+
+The performance release gate remains in [`scripts/perf`](scripts/perf).
+
+## Publishing the website and documentation
+
+The public site is assembled on this repository's `gh-pages` branch. With all
+five repositories cloned as siblings, publish the website and documentation in
+sequence:
+
+```bash
+cd ../magpie-website
+npm run deploy
+
+cd ../magpie-docs
+npm run deploy
+```
+
+Both component scripts build their source, then call
+[`scripts/publish-pages-artifact.sh`](scripts/publish-pages-artifact.sh) in this
+repository. The website replaces the branch root while preserving `/docs`; the
+documentation deployment replaces only `/docs`.
+
+Set `MAGPIE_DISTRIBUTION_REPO` if this repository is not at `../magpie`. Set
+`MAGPIE_DEPLOY_DRY_RUN=1` to build and validate without changing `gh-pages`, or
+`MAGPIE_DEPLOY_PUSH=0` to create the local `gh-pages` commit without pushing it.
+Run the two deployments sequentially so each starts from the latest branch.
+
+## Attributions and community
+
+- The [AbuseIPDB](https://www.abuseipdb.com/) logo is used with permission when linking to its site
 - Website: https://magpie.tools
 - Docs: https://magpie.tools/docs/
 - Discord: https://discord.gg/7FWAGXzhkC
-- Issues & feature requests: open them on GitHub.
 
 ## License
-Magpie ships under the **GNU Affero General Public License v3.0**. See `LICENSE` for the full text. Contributions are more than welcome.
+
+Magpie is distributed under the GNU Affero General Public License v3.0. See
+[`LICENSE`](LICENSE) for the complete license.
+
+### Scraper fetching modes
+
+New sources use HTTP fetching. Enable **Requires JavaScript** when adding a
+source or in its detail page to render it in Chromium. This setting belongs to
+the active workspace. Existing sources retain browser rendering after migration.
+
+Run the normal `--migrate-only` upgrade step before starting this backend version.
+The migration adds fetching mode and last-scrape status fields to workspace
+source associations. Upgrade all backend replicas together so older workers do
+not keep scraping HTTP sources through Chromium.
+
+Chromium starts only for browser sources. `SCRAPER_PAGE_POOL_MAX_CAPACITY`
+limits concurrent browser scrapes per instance, defaults to 4, and accepts 1–64.
+The former minimum page-pool setting no longer preallocates idle pages.
+`SCRAPER_POST_PROCESS_QUEUE_CAPACITY` defaults to 16 to limit queued HTML memory.
+
+New sources are eligible immediately and workers drain them at configured
+concurrency. Browser capacity failures, outages, timeouts, HTTP 429 and HTTP 5xx
+retry after 30 seconds or the scrape interval, whichever is shorter. Other
+failures use the normal interval. The source list and detail page show the last
+scrape outcome separately from proxy health.
+
+If a scrape logs `extended protocol limited to 65535 parameters`, upgrade to a
+backend build with the proxy-ingestion batching fix and retry the source. Older
+builds could exceed PostgreSQL's per-statement limit when saving workspace
+associations or looking up large proxy lists. Inserts now use a separate batch
+size for each table, and large hash lookups are split. This fix requires no
+additional schema migration or environment setting.
+
+### Account profile compatibility
+
+The sidebar displays the signed-in account email using `GET /api/user/profile`.
+Deploy matching frontend and backend releases together so session restoration can access this endpoint.
+
+### Table action columns
+
+The proxy and scrape source lists default to an ellipsis Actions menu. Select **Actions (buttons)**
+in the column picker for the previous inline buttons. Update the frontend and
+backend together to save this preference; older backends discard the
+`actions_buttons` column identifier. The scrape source list hides Robots Check
+by default; existing saved column selections are preserved.
+
+### Scrape source table sorting
+
+Deploy matching frontend and backend releases for scrape source sorting. The
+frontend sends `sortField` and `sortOrder` to `GET /api/getScrapingSourcesPage/{page}`;
+the backend sorts all matching sources before pagination. Older backends ignore
+these parameters. No schema migration or new environment setting is required.
+
+When validating a release, use more than one page of sources and check URL,
+proxy count, alive count, and health in both directions. Changing the sort should
+return to page one; moving to the next page should preserve the sort and filters.

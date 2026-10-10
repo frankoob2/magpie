@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-$repoOwner = if ($env:MAGPIE_REPO_OWNER) { $env:MAGPIE_REPO_OWNER } else { "Kuucheen" }
+$repoOwner = if ($env:MAGPIE_REPO_OWNER) { $env:MAGPIE_REPO_OWNER } else { "Magpie-Tools" }
 $repoName  = if ($env:MAGPIE_REPO_NAME)  { $env:MAGPIE_REPO_NAME }  else { "magpie" }
 $repoRef   = if ($env:MAGPIE_REPO_REF)   { $env:MAGPIE_REPO_REF }   else { "master" }
 $repoRefPath = if ($repoRef -like "refs/*") { $repoRef } else { "refs/heads/$repoRef" }
@@ -158,6 +158,14 @@ try {
 
 Write-Host "Pulling images..."
 Invoke-NativeOrThrow -FilePath $composeFile -Arguments @($composeBaseArgs + @("-f", "docker-compose.yml", "pull")) -What "docker compose pull"
+
+Write-Host "Migration safety: confirm you have coordinated PostgreSQL and Redis backups."
+Write-Host "Workspace migrations change resource ownership columns; rollback requires those backups."
+Write-Host "Stopping backend for database migration..."
+Invoke-NativeOrThrow -FilePath $composeFile -Arguments @($composeBaseArgs + @("-f", "docker-compose.yml", "stop", "backend")) -What "docker compose stop backend"
+
+Write-Host "Running database migration..."
+Invoke-NativeOrThrow -FilePath $composeFile -Arguments @($composeBaseArgs + @("-f", "docker-compose.yml", "run", "--rm", "backend", "--migrate-only")) -What "backend database migration"
 
 Write-Host "Applying update..."
 Invoke-NativeOrThrow -FilePath $composeFile -Arguments @($composeBaseArgs + @("-f", "docker-compose.yml", "up", "-d")) -What "docker compose up"
