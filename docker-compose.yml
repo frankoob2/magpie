@@ -6,7 +6,7 @@ x-logging: &default-logging
 
 services:
   backend:
-    image: ${MAGPIE_BACKEND_IMAGE:-kuuchen/magpie-backend}:${MAGPIE_BACKEND_TAG:-${MAGPIE_IMAGE_TAG:-latest}}
+    image: kuuchen/magpie-backend:26bfa2a
     container_name: magpie_backend
     ports:
       - "5656:5656"
